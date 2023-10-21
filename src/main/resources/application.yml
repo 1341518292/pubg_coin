@@ -1,0 +1,8 @@
+server:
+  port: 8889
+pubg:
+  ticket: f470647e-f1bf-4217-86ff-41bf6768e69c
+  cron: 0 0 10 * * ?
+  silverChest: true #白银宝箱
+  bronzeChest: false #青铜宝箱
+
