@@ -18,7 +18,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -34,14 +37,14 @@ public class QuartzDynamicJobConfig extends QuartzJobBean {
     @Value("${pubg.ticket}")
     private String ticket;
 
-    @Autowired
-    ThreadPoolExecutor threadPoolExecutor;
 
     @Override
     protected void executeInternal(JobExecutionContext jobExecutionContext)  {
         JobDataMap map = jobExecutionContext.getMergedJobDataMap();
         QuartzEntity entity = (QuartzEntity) map.get("info");
-        task(entity);
+        List<QuartzEntity> quartzEntityList = entity.getQuartzEntityList();
+        quartzEntityList.forEach(this::task);
+
     }
 
 
@@ -61,21 +64,17 @@ public class QuartzDynamicJobConfig extends QuartzJobBean {
         }
     }
 
-    private static Integer i = 1;
+    private static Integer i = 0;
 
     @SneakyThrows
     private void task(QuartzEntity entity) {
         HashMap<String, Object> paramMap = new HashMap<>(1);
         String giftId = entity.getGiftId();
         paramMap.put("gift_id", giftId);
-        //链式构建请求
         log.info("开始请求:{}", giftId);
-        PubgResult pubgResult = request(paramMap);
-        log.info(pubgResult.getMsg());
-        if (ResultCodeEnum.SUCCESS.getValue().equals(pubgResult.getR())) {
-            return;
-        }
-        log.info("蓝洞搞事情我也开搞！启动暴力请求");
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(20, 20,
+                30, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(1), new ThreadPoolExecutor.DiscardOldestPolicy());
         while (!threadPoolExecutor.isShutdown()){
             threadPoolExecutor.execute(() -> {
                 PubgResult request = request(paramMap);

@@ -29,9 +29,9 @@ public class ConfigureQuartz implements ApplicationContextAware {
 
     @Bean
     public ThreadPoolExecutor poolExecutor(){
-        return new ThreadPoolExecutor(10, 10,
-                10, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(1), new ThreadPoolExecutor.DiscardOldestPolicy());
+        return new ThreadPoolExecutor(20, 20,
+                30, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(30), new ThreadPoolExecutor.DiscardOldestPolicy());
 
     }
 

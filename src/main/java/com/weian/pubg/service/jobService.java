@@ -15,7 +15,9 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static com.weian.pubg.config.QuartzDynamicJobConfig.url;
 
@@ -44,16 +46,18 @@ public class jobService {
     @SneakyThrows
     @PostConstruct
     public void init(){
+        List<QuartzEntity> list = new ArrayList<>();
         if(silverChest){
             log.info("添加白银宝箱定时");
-            QuartzEntity quartzEntity = new QuartzEntity("1", cron, "300005");
-            quartzUtil.addScheduler(quartzEntity);
+            list.add(new QuartzEntity("1", cron, "300005"));
         }
         if(bronzeChest){
             log.info("添加青铜宝箱定时");
-            QuartzEntity quartzEntity1 = new QuartzEntity("2", cron, "300006");
-            quartzUtil.addScheduler(quartzEntity1);
+            list.add(new QuartzEntity("2", cron, "300006"));
         }
+        QuartzEntity quartzEntity = new QuartzEntity("1", cron, "300005");
+        quartzEntity.setQuartzEntityList(list);
+        quartzUtil.addScheduler(quartzEntity);
         log.info("任务准备就绪,开始验证票据");
         HashMap<String, Object> paramMap = new HashMap<>(1);
         paramMap.put("gift_id", "300005");
