@@ -74,4 +74,26 @@ public class jobService {
         }
     }
 
+
+
+    public static void main(String[] args) {
+        while (true){
+
+            HashMap<String, Object> paramMap = new HashMap<>(1);
+            paramMap.put("gift_id", "300006");
+            String url = "https://cafe.playbattlegrounds.com/act/a20231012pubg/get_gift";
+            String ticket = "9168e177-6114-4a48-ba85-fa02decb9e93";
+
+            log.info("开始");
+            String json = HttpRequest.post(url)
+                    .header(Header.COOKIE, "ticket=" + ticket)
+                    .header(Header.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36")
+                    .form(paramMap)
+                    .timeout(5000)
+                    .execute().body();
+            log.info("结束：{}",json);
+        }
+
+    }
+
 }

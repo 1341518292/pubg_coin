@@ -65,6 +65,7 @@ public class QuartzDynamicJobConfig extends QuartzJobBean {
     }
 
     private static Integer i = 0;
+    private static Integer max = 120;
 
     @SneakyThrows
     private void task(QuartzEntity entity) {
@@ -80,9 +81,14 @@ public class QuartzDynamicJobConfig extends QuartzJobBean {
                 PubgResult request = request(paramMap);
                 i++;
                 log.info("第{}次请求,礼物:{},代码:{},消息:{}",i, giftId,request.getR(),request.getMsg());
-                if(ResultCodeEnum.SUCCESS.getValue().equals(request.getR())){
+                if(ResultCodeEnum.SUCCESS.getValue().equals(request.getR()) ){
                     log.info("搞定,小洞这下知道我的厉害了吧");
                     threadPoolExecutor.shutdownNow();
+                }
+                if( i > max){
+                    log.info("超过{}次自动停止", max);
+                    threadPoolExecutor.shutdownNow();
+                    threadPoolExecutor.shutdown();
                 }
             });
         }
