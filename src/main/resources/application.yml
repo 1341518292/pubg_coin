@@ -1,8 +1,10 @@
 server:
   port: 8889
 pubg:
-  ticket: f470647e-f1bf-4217-86ff-41bf6768e69c
+  ticket: fcd2c2aa-0f5e-44a5-a40a-1de3941dfbc2
   cron: 0 0 10 * * ?
   silverChest: true #白银宝箱
-  bronzeChest: false #青铜宝箱
+  bronzeChest: true #青铜宝箱
+  max: 66
+  delay: 66
 

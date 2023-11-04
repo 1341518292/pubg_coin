@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -37,13 +39,27 @@ public class QuartzDynamicJobConfig extends QuartzJobBean {
     @Value("${pubg.ticket}")
     private String ticket;
 
+    @Value("${pubg.max}")
+    private Integer max;
+
+    @Value("${pubg.delay}")
+    private Integer delay;
+
 
     @Override
     protected void executeInternal(JobExecutionContext jobExecutionContext)  {
         JobDataMap map = jobExecutionContext.getMergedJobDataMap();
         QuartzEntity entity = (QuartzEntity) map.get("info");
         List<QuartzEntity> quartzEntityList = entity.getQuartzEntityList();
-        quartzEntityList.forEach(this::task);
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        for (int i1 = 0; i1 < quartzEntityList.size(); i1++) {
+            QuartzEntity entity1 = quartzEntityList.get(i1);
+            task(entity1);
+        }
 
     }
 
@@ -65,10 +81,30 @@ public class QuartzDynamicJobConfig extends QuartzJobBean {
     }
 
     private static Integer i = 0;
-    private static Integer max = 120;
+    /**
+     * 规则锁对象
+     */
+    private final Lock ruleLock = new ReentrantLock();
+
+    public boolean getRuleState(ThreadPoolExecutor threadPoolExecutor) {
+        ruleLock.lock();// 得到锁
+        try {
+            if( i >= max){
+                log.info("超过{}次自动停止", max);
+                threadPoolExecutor.shutdownNow();
+                threadPoolExecutor.shutdown();
+                return true;
+            }else {
+                return false;
+            }
+        } finally {
+            ruleLock.unlock();// 释放锁
+        }
+    }
 
     @SneakyThrows
     private void task(QuartzEntity entity) {
+        i = 0;
         HashMap<String, Object> paramMap = new HashMap<>(1);
         String giftId = entity.getGiftId();
         paramMap.put("gift_id", giftId);
@@ -78,6 +114,9 @@ public class QuartzDynamicJobConfig extends QuartzJobBean {
                 new ArrayBlockingQueue<>(1), new ThreadPoolExecutor.DiscardOldestPolicy());
         while (!threadPoolExecutor.isShutdown()){
             threadPoolExecutor.execute(() -> {
+                if(getRuleState(threadPoolExecutor)){
+                    return;
+                }
                 PubgResult request = request(paramMap);
                 i++;
                 log.info("第{}次请求,礼物:{},代码:{},消息:{}",i, giftId,request.getR(),request.getMsg());
@@ -85,13 +124,10 @@ public class QuartzDynamicJobConfig extends QuartzJobBean {
                     log.info("搞定,小洞这下知道我的厉害了吧");
                     threadPoolExecutor.shutdownNow();
                 }
-                if( i > max){
-                    log.info("超过{}次自动停止", max);
-                    threadPoolExecutor.shutdownNow();
-                    threadPoolExecutor.shutdown();
-                }
+
             });
         }
+        Thread.sleep(1000);
         log.info("任务结束!!!");
     }
 
