@@ -1,7 +1,7 @@
 server:
   port: 8889
 pubg:
-  ticket: fcd2c2aa-0f5e-44a5-a40a-1de3941dfbc2
+  ticket: fcd2c2aa-0f5e-44a5-a40a-1de3941dfbc2 #票据
   cron: 0 0 10 * * ?
   silverChest: true #白银宝箱
   bronzeChest: true #青铜宝箱
